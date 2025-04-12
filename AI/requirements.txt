@@ -1,0 +1,12 @@
+agno
+google-genai
+python-dotenv
+chromadb
+flask
+flask-cors
+sentence-transformers
+duckduckgo-search
+pypdf
+sqlalchemy
+openai
+psycopg[binary]
