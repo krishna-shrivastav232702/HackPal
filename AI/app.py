@@ -79,6 +79,7 @@ def create_idea_generator_agent(session_id,knowledge_base=None):
         search_knowledge=True,
         storage=PostgresStorage(table_name="agent_sessions",db_url=db_url),
         instructions=[
+            "MANDATORY: ALWAYS search the knowledge base for EVERY query, including when resuming previous sessions."
             "Generate innovative hackathon project ideas tailored to the user's needs and context.",
             "CRITICAL: ALWAYS thoroughly search the knowledge base BEFORE responding to ANY query.",
             "Never claim you don't have information without first exhaustively searching the knowledge base.",
@@ -113,6 +114,7 @@ def create_code_explainer_agent(session_id,knowledge_base=None):
         search_knowledge=True,
         storage=PostgresStorage(table_name="agent_sessions",db_url=db_url),
         instructions=[
+            "MANDATORY: ALWAYS search the knowledge base for EVERY query, including when resuming previous sessions."
             "Explain code snippets in clear, accessible language appropriate to the user's background.",
             "CRITICAL: ALWAYS thoroughly search the knowledge base BEFORE responding to ANY query.",
             "Never claim you don't have information without first exhaustively searching the knowledge base.",
@@ -147,6 +149,7 @@ def create_error_debugger_agent(session_id,knowledge_base=None):
         search_knowledge=True,
         storage=PostgresStorage(table_name="agent_sessions",db_url=db_url),
         instructions=[
+            "MANDATORY: ALWAYS search the knowledge base for EVERY query, including when resuming previous sessions."
             "Debug code errors comprehensively with solutions tailored to the user's context.",
             "CRITICAL: ALWAYS thoroughly search the knowledge base BEFORE responding to ANY query.",
             "Never claim you don't have information without first exhaustively searching the knowledge base.",
@@ -180,6 +183,7 @@ def create_pdf_summarizer_agent(session_id,knowledge_base=None):
         knowledge=knowledge_base,
         search_knowledge=True,
         instructions=[
+            "MANDATORY: ALWAYS search the knowledge base for EVERY query, including when resuming previous sessions."
             "Analyze and extract key information from uploaded documents with a focus on context-relevant details.",
             "CRITICAL: ALWAYS thoroughly search the knowledge base BEFORE responding to ANY query.",
             "Never claim you don't have information without first exhaustively searching the knowledge base.",
@@ -214,6 +218,7 @@ def create_chat_agent(session_id,knowledge_base=None):
         knowledge=knowledge_base,
         storage=PostgresStorage(table_name="agent_sessions",db_url=db_url),
         instructions=[
+            "MANDATORY: ALWAYS search the knowledge base for EVERY query, including when resuming previous sessions."
             "Provide helpful assistance on hackathons, programming, and technology with personalization from available context.",
             "CRITICAL: ALWAYS thoroughly search the knowledge base BEFORE responding to ANY query.",
             "Never claim you don't have information without first exhaustively searching the knowledge base.",
@@ -255,6 +260,7 @@ def create_hackpal_team(session_id,knowledge_base=None):
         num_of_interactions_from_history=MEMORY_WINDOW_SIZE,
         markdown=True,
         instructions=[
+            "MANDATORY: ALWAYS search the knowledge base for EVERY query, including when resuming previous sessions."
             "Route queries to the most appropriate specialized agent while maintaining context awareness.",
             "CRITICAL REQUIREMENT: For EVERY query, first thoroughly search the knowledge base for relevant information BEFORE responding.",
             "Never claim you don't have information without first exhaustively searching the knowledge base.",
@@ -306,12 +312,10 @@ def hackpal_endpoint():
 
     try:
         knowledge_base = get_or_create_knowledge_base(session_id,pdf_path)
-        print("Inside")
-        print("knowledge base",knowledge_base)
-        create_hackpal_team(session_id, knowledge_base).print_response(message)
+        response = create_hackpal_team(session_id, knowledge_base).run(message)
         # print("response",response.content)
         return jsonify({
-            "response":True,
+            "response":response.content,
             "session_id":session_id
         })
     except ModelProviderError as e:
