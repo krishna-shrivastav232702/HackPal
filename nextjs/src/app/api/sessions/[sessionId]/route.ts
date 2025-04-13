@@ -4,10 +4,10 @@ import connectToDatabase from "@/db/db";
 import Session from "@/models/session.model";
 import Messages from "@/models/message.model";
 
-export async function GET(req: NextRequest, { params }: { params: { sessionId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ sessionId: string }> }) {
     try {
         await connectToDatabase();
-        const { sessionId } = params;
+        const { sessionId } = await params;
         const session = await Session.findOne({
             _id: sessionId,
         }).lean();
