@@ -1,28 +1,28 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
 import {
     Sidebar,
     SidebarBody,
     SidebarLink
 } from "@/components/ui/sidebar";
-import {
-    MessageCircle,
-    PlusCircle,
-    Settings,
-    User,
-    Send,
-    LogOut,
-    Trash2,
-    Loader2
-} from "lucide-react";
-import Link from "next/link";
-import { motion } from "motion/react";
+import { useAuth } from "@/context/AuthProvider";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import {
+    Bot,
+    Loader2,
+    LogOut,
+    MessageCircle,
+    PlusCircle,
+    Send,
+    User
+} from "lucide-react";
+import { Paperclip, X } from 'lucide-react';
+import { motion } from "motion/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthProvider";
-import { Bot } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown"
 
 interface Message {
     _id: string;
@@ -53,10 +53,11 @@ export default function ChatPage() {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
-    const {logout} = useAuth();
+    const { logout } = useAuth();
 
     useEffect(() => {
         fetchSessions();
@@ -126,7 +127,7 @@ export default function ChatPage() {
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!input.trim() || !activeSession || isLoading) return;
+        if ((!input.trim() && !selectedFile) || !activeSession || isLoading) return;
 
         try {
             setIsLoading(true);
@@ -135,17 +136,39 @@ export default function ChatPage() {
                 _id: Date.now().toString(),
                 sessionId: activeSession._id,
                 role: 'user' as const,
-                content: input,
+                content: selectedFile
+                    ? input.trim()
+                        ? `${input} [Attached: ${selectedFile.name}]`
+                        : `File uploaded: ${selectedFile.name}`
+                    : input,
                 timestamp: new Date().toISOString()
             };
 
             setMessages(prev => [...prev, tempUserMessage]);
-            setInput(""); 
-            const response = await axios.post(`/api/sessions/${activeSession._id}/messages`, {
-                message: input,
-                userId
-            });
+            let response;
+            if (selectedFile) {
+                const formData = new FormData();
+                formData.append('userId', userId || '');
+                formData.append('message', input);
+                formData.append('pdf', selectedFile);
 
+                response = await axios.post(
+                    `/api/sessions/${activeSession._id}/messages`,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        }
+                    }
+                );
+            } else {
+                response = await axios.post(`/api/sessions/${activeSession._id}/messages`, {
+                    message: input,
+                    userId
+                });
+            }
+            setInput("");
+            setSelectedFile(null);
             if (response.data.success) {
                 setMessages(prev => {
                     const withoutTemp = prev.filter(msg => msg._id !== tempUserMessage._id);
@@ -279,7 +302,7 @@ export default function ChatPage() {
 
             <div className="flex flex-col flex-1 h-full">
                 <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4">
-                    <h1 className="text-lg font-medium">
+                    <h1 className="text-lg font-medium text-white">
                         {activeSession?.title || "New Chat"}
                     </h1>
                 </header>
@@ -290,7 +313,7 @@ export default function ChatPage() {
                             <div className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-full mb-4">
                                 <MessageCircle className="h-6 w-6 text-neutral-500 dark:text-neutral-300" />
                             </div>
-                            <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
+                            <h3 className="text-lg font-bold mb-2 text-white">Start a conversation</h3>
                             <p className="text-neutral-500 max-w-md">
                                 Ask a question or start a conversation with our AI assistant.
                             </p>
@@ -307,7 +330,11 @@ export default function ChatPage() {
                                         : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
                                         }`}
                                 >
-                                    <div className="whitespace-pre-wrap">{message.content}</div>
+                                    <div className="whitespace-pre-wrap break-words">
+                                        <ReactMarkdown>
+                                            {message.content}
+                                        </ReactMarkdown>
+                                    </div>
                                 </div>
                             </div>
                         ))
@@ -317,25 +344,64 @@ export default function ChatPage() {
 
                 <div className="border-t border-neutral-200 dark:border-neutral-800 p-4">
                     <form onSubmit={sendMessage} className="relative">
-                        <input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="Type your message..."
-                            className="w-full p-3 pr-12 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            disabled={isLoading || !activeSession}
-                        />
-                        <button
-                            type="submit"
-                            className="absolute right-3 top-3 text-neutral-500 hover:text-blue-500 disabled:text-neutral-300"
-                            disabled={isLoading || !input.trim() || !activeSession}
-                        >
-                            {isLoading ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <Send className="h-5 w-5" />
-                            )}
-                            <span className="sr-only">Send</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <label className="flex-shrink-0 p-2 text-neutral-500 hover:text-blue-500 cursor-pointer rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept=".pdf,.txt,.doc,.docx"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            setSelectedFile(e.target.files[0]);
+                                        }
+                                    }}
+                                    disabled={isLoading || !activeSession}
+                                />
+                                <Paperclip className="h-5 w-5" />
+                                <span className="sr-only">Attach file</span>
+                            </label>
+
+                            <div className="relative flex-1">
+                                <input
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder={selectedFile ? "Add a message with your file or send as is..." : "Type your message..."}
+                                    className="w-full p-3 pr-12 rounded-lg  border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-neutral-500 text-white dark:placeholder:text-neutral-400"
+                                    disabled={isLoading || !activeSession}
+                                />
+                                <button
+                                    type="submit"
+                                    className="absolute right-3 top-3 text-neutral-500 hover:text-blue-500 disabled:text-neutral-300"
+                                    disabled={isLoading || (!input.trim() && !selectedFile) || !activeSession}
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <Send className="h-5 w-5" />
+                                    )}
+                                    <span className="sr-only">Send</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {selectedFile && (
+                            <div className="flex items-center mt-2 text-sm">
+                                <div className="flex-1 text-neutral-600 dark:text-neutral-300 truncate">
+                                    <span className="font-medium">Selected file:</span> {selectedFile.name}
+                                    <span className="ml-1 text-neutral-500">
+                                        ({(selectedFile.size / 1024).toFixed(1)} KB)
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedFile(null)}
+                                    className="ml-2 p-1 text-neutral-500 hover:text-red-500 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                >
+                                    <X className="h-4 w-4" />
+                                    <span className="sr-only">Remove file</span>
+                                </button>
+                            </div>
+                        )}
                     </form>
                 </div>
             </div>

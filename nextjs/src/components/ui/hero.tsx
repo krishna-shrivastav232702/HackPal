@@ -6,15 +6,23 @@ import { RoboAnimation } from "./robo-animation"
 import { FloatingPaper } from "./floating-paper"
 import { Button } from "./Button"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthProvider"
+import { useState } from "react"
+import LoginModal from "../auth/LoginModal"
 
 export default function Hero() {
     const router = useRouter();
+    const {user} = useAuth();
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
     const handleClick = () =>{
-        router.push("/chat");
+        if (user) {
+            router.push("/chat");
+        } else {
+            setIsLoginOpen(true);
+        }
     }
     return (
         <div className="relative min-h-[calc(100vh-76px)] flex items-center">
-            {/* Floating papers background */}
             <div className="absolute inset-0 overflow-hidden">
                 <FloatingPaper count={6} />
             </div>
@@ -48,7 +56,7 @@ export default function Hero() {
                     >
                         <Button onClick={handleClick} size="lg" variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20 flex items-center">
                             <Sparkles className="mr-2 h-5 w-5" />
-                            Explore Features
+                            Get Started
                         </Button>
                     </motion.div>
                 </div>
@@ -57,6 +65,7 @@ export default function Hero() {
             <div className="absolute bottom-0 right-0 w-96 h-96">
                 <RoboAnimation />
             </div>
+            {isLoginOpen && <LoginModal onClose={() => setIsLoginOpen(false)} />}
         </div>
     )
 }

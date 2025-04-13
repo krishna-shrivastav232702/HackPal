@@ -27,10 +27,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ sess
 }
 
 
-export async function PUT(req: NextRequest, { params }: { params: { sessionId: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ sessionId: string }> }) {
     try {
         await connectToDatabase();
-        const { sessionId } = params;
+        const { sessionId } = await params;
         const body = await req.json();
         const { userId, title, status } = body;
         const session = await Session.findOneAndUpdate(
