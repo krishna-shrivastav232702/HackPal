@@ -35,6 +35,7 @@ user_knowledge_base = {}
 
 
 def create_pdf_knowledge_base(pdf_path):
+    print("Inside knowledge base")
     kb = PDFKnowledgeBase(
         path=pdf_path,
         vector_db=PgVector(
@@ -49,6 +50,7 @@ def create_pdf_knowledge_base(pdf_path):
 
 
 def get_or_create_knowledge_base(session_id,pdf_path=None):
+    print("Inside get_or_create_knowledge_base")
     if session_id not in user_knowledge_base:
         if pdf_path:
             user_knowledge_base[session_id] = create_pdf_knowledge_base(pdf_path)
