@@ -18,10 +18,10 @@ export default function Hero() {
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
-                            Transform Your Research with
+                            Supercharge Your Hackathon Game with
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
                                 {" "}
-                                AI Power
+                                AI
                             </span>
                         </h1>
                     </motion.div>
@@ -32,8 +32,7 @@ export default function Hero() {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className="text-gray-400 text-xl mb-8 max-w-2xl mx-auto"
                     >
-                        Upload your research papers and let our AI transform them into engaging presentations, podcasts, and visual
-                        content.
+                        Get instant summaries, idea generation, code debugging & more—just upload a PDF and let the magic happen.
                     </motion.p>
 
                     <motion.div
@@ -42,13 +41,9 @@ export default function Hero() {
                         transition={{ duration: 0.5, delay: 0.4 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
-                        <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8">
-                            <FileText className="mr-2 h-5 w-5" />
-                            Upload Paper
-                        </Button>
-                        <Button size="lg" variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20">
+                        <Button size="lg" variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20 flex items-center">
                             <Sparkles className="mr-2 h-5 w-5" />
-                            See Examples
+                            Explore Features
                         </Button>
                     </motion.div>
                 </div>
