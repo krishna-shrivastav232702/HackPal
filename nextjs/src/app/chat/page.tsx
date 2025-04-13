@@ -24,7 +24,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import { Bot } from "lucide-react";
 
-// Types for our data
 interface Message {
     _id: string;
     sessionId: string;
@@ -57,6 +56,7 @@ export default function ChatPage() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const {logout} = useAuth();
 
     useEffect(() => {
         fetchSessions();
@@ -91,7 +91,6 @@ export default function ChatPage() {
         }
     };
 
-    // Fetch messages for a specific session
     const fetchMessages = async (sessionId: string) => {
         try {
             const response = await axios.get(`/api/sessions/${sessionId}/messages`);
@@ -103,7 +102,6 @@ export default function ChatPage() {
         }
     };
 
-    // Create a new chat session
     const createNewSession = async () => {
         try {
             setIsLoading(true);
@@ -133,7 +131,6 @@ export default function ChatPage() {
         try {
             setIsLoading(true);
 
-            // Optimistically add user message to UI
             const tempUserMessage = {
                 _id: Date.now().toString(),
                 sessionId: activeSession._id,
@@ -143,24 +140,18 @@ export default function ChatPage() {
             };
 
             setMessages(prev => [...prev, tempUserMessage]);
-            setInput(""); // Clear input field immediately
-
-            // Send to API
+            setInput(""); 
             const response = await axios.post(`/api/sessions/${activeSession._id}/messages`, {
                 message: input,
                 userId
             });
 
             if (response.data.success) {
-                // Replace the temporary message with the real one and add assistant response
                 setMessages(prev => {
-                    // Remove the temp message
                     const withoutTemp = prev.filter(msg => msg._id !== tempUserMessage._id);
-                    // Add the real messages from response
                     return [...withoutTemp, ...response.data.messages];
                 });
 
-                // Update session title if it's a new chat with default title
                 if (activeSession.title === 'New Chat' && input.length > 0) {
                     const newTitle = input.length > 30 ? input.substring(0, 30) + '...' : input;
                     updateSessionTitle(activeSession._id, newTitle);
@@ -168,9 +159,7 @@ export default function ChatPage() {
             }
         } catch (error) {
             console.error("Error sending message:", error);
-            // Restore input if message failed 
             setInput(input);
-            // Remove optimistic update
             setMessages(prev => prev.filter(msg => msg._id !== Date.now().toString()));
         } finally {
             setIsLoading(false);
@@ -203,7 +192,6 @@ export default function ChatPage() {
         }
     };
 
-    // Select a session
     const handleSessionSelect = (sessionId: string) => {
         const selected = sessions.find(s => s._id === sessionId);
         if (selected) {
@@ -211,15 +199,13 @@ export default function ChatPage() {
         }
     };
 
-    // Clear all conversations
-    const clearConversations = async () => {
-        // You would implement this based on your API
-        // For now just confirmation
-        if (confirm("Are you sure you want to clear all conversations?")) {
-            // Implementation would depend on your API
-            console.log("Clear conversations functionality would go here");
-        }
-    };
+    const handleLogout = () => {
+        logout();
+        router.replace('/');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 100);
+    }
 
     return (
         <div className="flex w-full h-screen overflow-hidden bg-white dark:bg-neutral-900">
@@ -228,7 +214,6 @@ export default function ChatPage() {
                     <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
                         {open ? <Logo /> : <LogoIcon />}
                         <div className="mt-8 flex flex-col gap-2">
-                            {/* New Chat Button */}
                             <SidebarLink
                                 link={{
                                     label: "New Chat",
@@ -239,7 +224,6 @@ export default function ChatPage() {
                                 onClick={createNewSession}
                             />
 
-                            {/* Session Loading State */}
                             {isLoadingSessions ? (
                                 <div className="flex items-center justify-center py-4">
                                     <Loader2 className="h-5 w-5 animate-spin text-neutral-500" />
@@ -249,7 +233,6 @@ export default function ChatPage() {
                                     No conversations yet
                                 </div>
                             ) : (
-                                // Chat Sessions List
                                 sessions.map((session) => (
                                     <SidebarLink
                                         key={session._id}
@@ -269,31 +252,14 @@ export default function ChatPage() {
                         </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                        {/* Bottom Links */}
-                        <SidebarLink
-                            link={{
-                                label: "Settings",
-                                href: "#settings",
-                                icon: <Settings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
-                            }}
-                            className="px-2"
-                        />
-                        <SidebarLink
-                            link={{
-                                label: "Clear Conversations",
-                                href: "#clear",
-                                icon: <Trash2 className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
-                            }}
-                            className="px-2"
-                            onClick={clearConversations}
-                        />
                         <SidebarLink
                             link={{
                                 label: "Logout",
-                                href: "#logout",
+                                href: "#",
                                 icon: <LogOut className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
                             }}
                             className="px-2"
+                            onClick={handleLogout}
                         />
                         <SidebarLink
                             link={{
@@ -311,16 +277,13 @@ export default function ChatPage() {
                 </SidebarBody>
             </Sidebar>
 
-            {/* Chat Area */}
             <div className="flex flex-col flex-1 h-full">
-                {/* Chat Header */}
                 <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4">
                     <h1 className="text-lg font-medium">
                         {activeSession?.title || "New Chat"}
                     </h1>
                 </header>
 
-                {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center p-8">
@@ -352,7 +315,6 @@ export default function ChatPage() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
                 <div className="border-t border-neutral-200 dark:border-neutral-800 p-4">
                     <form onSubmit={sendMessage} className="relative">
                         <input
@@ -381,7 +343,6 @@ export default function ChatPage() {
     );
 }
 
-// Logo components
 export const Logo = () => {
     return (
         <Link

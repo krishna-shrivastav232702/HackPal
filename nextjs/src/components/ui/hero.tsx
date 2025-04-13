@@ -5,8 +5,13 @@ import { FileText, Sparkles } from "lucide-react"
 import { RoboAnimation } from "./robo-animation"
 import { FloatingPaper } from "./floating-paper"
 import { Button } from "./Button"
+import { useRouter } from "next/navigation"
 
 export default function Hero() {
+    const router = useRouter();
+    const handleClick = () =>{
+        router.push("/chat");
+    }
     return (
         <div className="relative min-h-[calc(100vh-76px)] flex items-center">
             {/* Floating papers background */}
@@ -41,7 +46,7 @@ export default function Hero() {
                         transition={{ duration: 0.5, delay: 0.4 }}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
-                        <Button size="lg" variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20 flex items-center">
+                        <Button onClick={handleClick} size="lg" variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20 flex items-center">
                             <Sparkles className="mr-2 h-5 w-5" />
                             Explore Features
                         </Button>
@@ -49,7 +54,6 @@ export default function Hero() {
                 </div>
             </div>
 
-            {/* Animated robot */}
             <div className="absolute bottom-0 right-0 w-96 h-96">
                 <RoboAnimation />
             </div>
