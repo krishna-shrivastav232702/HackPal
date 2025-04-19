@@ -78,10 +78,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email,
                 password,
             });
-
             if (response.data.user.userId) {
                 localStorage.setItem("userId", response.data.user.userId);
             }
+            setUser({
+                userId: response.data.user.userId,
+                username: response.data.user.username,
+            });
             toast.success("Signup successful");
         } catch (error: any) {
             setError(error.response?.data?.message || "Signup Failed");

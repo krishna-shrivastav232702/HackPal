@@ -412,7 +412,7 @@ export default function ChatPage() {
 export const Logo = () => {
     return (
         <Link
-            href="#"
+            href="/"
             className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
         >
             <motion.span
@@ -430,7 +430,7 @@ export const Logo = () => {
 export const LogoIcon = () => {
     return (
         <Link
-            href="#"
+            href="/"
             className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
         >
             <Bot className="w-10 h-10 text-purple-500 mt-[-1px]" />
